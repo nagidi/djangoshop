@@ -1,0 +1,82 @@
+{% extends "shop/base.html" %} {% load i18n %} {% block title %} {% trans
+"Checkout" %} {% endblock %} {% block content %}
+<h1>{% trans "Checkout" %}</h1>
+
+<div class="order-info">
+  <h3>{% trans "Your order" %}</h3>
+
+  <div>
+    <input
+      type="radio"
+      id="shipping"
+      name="shipping_value"
+      data_shipping_value="200.23"
+      value="express"
+      checked
+    />
+    <label for="shipping">Express</label>
+  </div>
+
+  <ul>
+    {% for item in cart %}
+    <li>
+      {{ item.quantity }}x {{ item.product.name }}
+      <span>${{ item.total_price|floatformat:"2" }}</span>
+    </li>
+    {% endfor %} {% if cart.coupon %}
+    <li>
+      {% blocktrans with code=cart.coupon.code discount=cart.coupon.discount %}
+      "{{ code }}" ({{ discount }}% off) {% endblocktrans %}
+      <span>- ${{ cart.get_discount|floatformat:"2" }}</span>
+    </li>
+    {% endif %}
+  </ul>
+  <p>
+    {% trans "Total" %}:<span id="afetr_price">
+      ${{ cart.get_total_price_after_discount|floatformat:"2" }}</span
+    >
+  </p>
+</div>
+
+<form action="." method="post" class="order-form">
+  {{ form.as_p }}
+  <p><input type="submit" value="{% trans "Place order" %}"></p>
+  {% csrf_token %}
+</form>
+<script
+  src="https://code.jquery.com/jquery-1.12.4.min.js"
+  integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ="
+  crossorigin="anonymous"
+></script>
+<script type="text/javascript">
+  $(function() {
+ test= {'countryid': 'INTL', 'International_Parcel_Surface': '138.20', "Priority_Worldwide_parcel_INT'L": '296.74', 'Xpresspost_International': '224.87'}
+   
+   console.log(test.Priority_Worldwide_parcel_INT'L);
+  $('#shipping').click(function () {
+  
+  $.ajax({
+
+         type : "GET",
+         url: "http://127.0.0.1:8000/en/cart/ajax-posting", /* django ajax posting url  */
+         data: {
+          data_act_value : {{ cart.get_total_price_after_discount|floatformat:"2"}},
+          data_value : $(this).attr('data_shipping_value'),
+          dataType: "json",
+
+         },
+
+         success: function(data){
+		    
+		  $('#id_shipping_cost').val(data.shipping_val)
+
+            $('#afetr_price').html(data.total_val) /* response message */
+         },
+
+
+  });
+
+  });
+  });
+</script>
+{% endblock %}
